@@ -1,12 +1,12 @@
 #include "flipperinterface.h"
 #include <QDebug>
 
-#define useDebug (1)
+#define FlipperInterfaceDebug (1)
 
 FlipperInterface::FlipperInterface(const QString &tcpAddr, const int &port, const int &flipperAddr, QObject *parent): QObject(parent), m_TCPaddress(tcpAddr), m_TCPport(port), m_FlipperAddress(flipperAddr), m_ChannelEnable(0x00)
 {
 
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Initialize Flipper interface";
 #endif
     // set default update data interval
@@ -14,12 +14,12 @@ FlipperInterface::FlipperInterface(const QString &tcpAddr, const int &port, cons
     m_CollectDataInterVal = m_Update_Interval_ms;
     // set default decimal value to all channels
 
-    setDecimalValue(Channel1, 100);
-    setDecimalValue(Channel2, 100);
-    setDecimalValue(Channel3, 100);
-    setDecimalValue(Channel4, 100);
-    setDecimalValue(Channel5, 100);
-    setDecimalValue(Channel6, 100);
+    setDecimalValue(Channel1, 10);
+    setDecimalValue(Channel2, 10);
+    setDecimalValue(Channel3, 10);
+    setDecimalValue(Channel4, 10);
+    setDecimalValue(Channel5, 10);
+    setDecimalValue(Channel6, 10);
 
     QObject::connect(this,SIGNAL(FlipperTcpSettingChanged()),this,SLOT(FlipperTcpSettingsChangedHandler()));
 }
@@ -27,18 +27,18 @@ FlipperInterface::FlipperInterface(const QString &tcpAddr, const int &port, cons
 void FlipperInterface::start()
 {
 
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface started";
 #endif
-        if(connectToFlipper()){
-            initCollectDataTimer(m_CollectDataInterVal);
-        }
+    if(connectToFlipper()){
+        initCollectDataTimer(m_CollectDataInterVal);
+    }
 
 }
 
 void FlipperInterface::stop()
 {
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface stopped";
 #endif
     collectDataTimer->stop();
@@ -46,7 +46,7 @@ void FlipperInterface::stop()
 
 void FlipperInterface::setDecimalValue(const quint16 &channel, const quint16 &value)
 {
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: setDecimal value of channel" + QString::number(channel) + " to : " + QString::number(value);
 #endif
     m_channelsDecimalPointsHash.insert(channel, value);
@@ -54,7 +54,7 @@ void FlipperInterface::setDecimalValue(const quint16 &channel, const quint16 &va
 
 void FlipperInterface::setEnableChannels(const quint8 &value)
 {
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: setEnable channe"  + value;
 #endif
     m_ChannelEnable = value;
@@ -63,7 +63,7 @@ void FlipperInterface::setEnableChannels(const quint8 &value)
 void FlipperInterface::FlipperRespondHandler()
 {
 
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: enter Flipper Respond Handler";
 #endif
     auto reply = qobject_cast<QModbusReply *>(sender());
@@ -72,13 +72,22 @@ void FlipperInterface::FlipperRespondHandler()
 
     if (reply->error() == QModbusDevice::NoError) {
         const QModbusDataUnit unit = reply->result();
-
+#ifdef FlipperInterfaceDebug
         qDebug() << "start address: " + QString::number(unit.startAddress());
         qDebug() << "value at 0: " + QString::number((qint16) unit.value(0));
+#endif
+        double value;
+        if(unit.valueCount() != 0)
+        {
+            value = ((double)((qint16)unit.value(0)) / (double) m_channelsDecimalPointsHash.value(relativeCHaddressToChannelEnum.value(unit.startAddress())));
+        }
+        QHash<QString, QVariant> package;
 
+        package.insert("from", "flipperInterface");
+        package.insert("channel", relativeCHaddressToChannelEnum.value(unit.startAddress()));
+        package.insert("value", value);
 
-
-    unit.valueCount();
+        emit out(package);
 
     } else if (reply->error() == QModbusDevice::ProtocolError) {
         qDebug() << reply->errorString();
@@ -91,7 +100,7 @@ void FlipperInterface::FlipperRespondHandler()
 
 void FlipperInterface::emitRequests()
 {
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: enter emitRequests";
 #endif
     if(m_ChannelEnable & Channel1) m_requestList.append(QModbusDataUnit(QModbusDataUnit::InputRegisters,m_CH1MeasureReleativeAddress,m_ReadOutWordNumberMeasureCommand));
@@ -106,7 +115,7 @@ void FlipperInterface::emitRequests()
 
 void FlipperInterface::emitRequestsHandler()
 {
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: enter emitRequestHandler";
     qDebug() << "number of requests : " + m_requestList.count();
 #endif
@@ -129,7 +138,7 @@ void FlipperInterface::emitRequestsHandler()
 
 bool FlipperInterface::connectToFlipper()
 {
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: enter connectToFlipper()";
 #endif
     modbusDevice = new QModbusTcpClient(this);
@@ -141,11 +150,11 @@ bool FlipperInterface::connectToFlipper()
 
     if(modbusDevice->connectDevice())
     {
+#ifdef FlipperInterfaceDebug
         qDebug() << modbusDevice->state();
+#endif
         QObject::connect(modbusDevice, &QModbusTcpClient::stateChanged, this, &FlipperInterface::onStateChanged);
-
         return true;
-
     }
     return false;
 }
@@ -154,7 +163,7 @@ bool FlipperInterface::connectToFlipper()
 void FlipperInterface::initCollectDataTimer(const int &interval)
 {
 
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: enter initCollectDataTimer()";
 #endif
     collectDataTimer = new QTimer(this);
@@ -165,7 +174,7 @@ void FlipperInterface::initCollectDataTimer(const int &interval)
 
 void FlipperInterface::setCollectDataInterval(const int &interval)
 {
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: enter setCollectDataTimer()";
 #endif
     m_CollectDataInterVal = interval;
@@ -173,34 +182,38 @@ void FlipperInterface::setCollectDataInterval(const int &interval)
 
 void FlipperInterface::ModbusDeviceErrorHandler(QModbusDevice::Error error)
 {
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: enter ModbusDeviceErrorHandler()";
 #endif
-    //    static int connectAttempCounter = 0;
-    // print error to console
+    switch (error) {
+    case QModbusDevice::ConnectionError:
+    case QModbusDevice::TimeoutError:
+        // reconnect
+#ifdef FlipperInterfaceDebug
+        qDebug() << "Connection error, reconnect until STOP signal triggered";
+#endif
+        this->stop();
+        this->start();
+        break;
 
-    // this is a pure error State and error handler distribution
 
-    //    // disconnect
-    //        modbusDevice->disconnectDevice();
+    default:
 
-    //    // emit Reconnect to Device signal
-    //        if(modbusDevice->connectDevice())
-    //        {
-    //            connectAttempCounter = 0;
-    //        }
-    //        else{
-    //            connectAttempCounter ++;
-    //        }
+#ifdef FlipperInterfaceDebug
+        qDebug() << "QModbus device errors ! skip; only handle Qmodbus:Connection error and Timeout error";
+#endif
+        break;
+    }
 
 }
 
 void FlipperInterface::onStateChanged(int state)
 {
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: enter onStateChanged()";
-#endif
     qDebug() << modbusDevice->state();
+#endif
+
     static int attemptCounter = 0;
     if(state  == QModbusDevice::ConnectedState)
     {
@@ -224,7 +237,7 @@ void FlipperInterface::onStateChanged(int state)
 
 void FlipperInterface::setFlipperTcpSettings(const QString &tcpAddr, const int &port, const int &flipperAddr)
 {
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: enter setFlipperTcpSettings()";
 #endif
     m_TCPaddress = tcpAddr;
@@ -236,7 +249,7 @@ void FlipperInterface::setFlipperTcpSettings(const QString &tcpAddr, const int &
 
 void FlipperInterface::FlipperTcpSettingsChangedHandler()
 {
-#ifdef useDebug
+#ifdef FlipperInterfaceDebug
     qDebug() << "Flipper interface: enter FlipperTcpSettingsChangedHandler()";
 #endif
     if(collectDataTimer->isActive())
@@ -250,5 +263,13 @@ void FlipperInterface::FlipperTcpSettingsChangedHandler()
     }
 }
 
-
+const QHash<quint32,FlipperInterface::ChannelEnableEnum> FlipperInterface::relativeCHaddressToChannelEnum=QHash<quint32,FlipperInterface::ChannelEnableEnum>
+({
+     {m_CH1MeasureReleativeAddress, Channel1},
+     {m_CH2MeasureReleativeAddress, Channel2},
+     {m_CH3MeasureReleativeAddress, Channel3},
+     {m_CH4MeasureReleativeAddress, Channel4},
+     {m_CH5MeasureReleativeAddress, Channel5},
+     {m_CH6MeasureReleativeAddress, Channel6}
+ });
 

@@ -15,11 +15,11 @@ class FlipperInterface: public QObject
 public:
     FlipperInterface(const QString &tcpAddr, const int &port, const int &flipperAddr, QObject * parent = 0);
 
-     void setFlipperTcpSettings(const QString &tcpAddr, const int &port, const int &flipperAddr);
-     void stop();
-     void setDecimalValue(const quint16 &channel, const quint16 &value);
-     void setEnableChannels(const quint8 &value);
-     void setCollectDataInterval(const int &interval);
+    void setFlipperTcpSettings(const QString &tcpAddr, const int &port, const int &flipperAddr);
+    void stop();
+    void setDecimalValue(const quint16 &channel, const quint16 &value);
+    void setEnableChannels(const quint8 &value);
+    void setCollectDataInterval(const int &interval);
 
     enum ChannelEnableEnum{
         Channel1 = 0x01,
@@ -43,7 +43,7 @@ private slots:
     void FlipperTcpSettingsChangedHandler();
 signals:
 
-    void RecordDewPointToLocalDB(const int &channel, const double &value);
+    void out(QHash<QString,QVariant>);
     void FlipperTcpSettingChanged();
 private:
 
@@ -59,7 +59,7 @@ private:
     static constexpr const quint8 m_WriteInHoldingRegisterCode = 0x10;
     static constexpr const int m_ConnectToDevice_Attempts_Max = 30;
     static constexpr const int m_Update_Interval_ms = 60000;
-
+    static const QHash<quint32,ChannelEnableEnum> relativeCHaddressToChannelEnum;
     bool connectToFlipper();
     void initCollectDataTimer(const int &interval);
 

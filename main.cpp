@@ -13,11 +13,7 @@ int main(int argc, char *argv[])
 
     aFlipperinterface.moveToThread(&aThread);
     QObject::connect(&aThread,SIGNAL(started()),&aFlipperinterface, SLOT(start()));
-
-    aThread.start();
-
-
-
+     aThread.start();
 
     return a.exec();
 }
