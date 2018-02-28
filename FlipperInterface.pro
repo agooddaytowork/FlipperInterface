@@ -1,4 +1,4 @@
-QT += core
+QT += core serialbus
 QT -= gui
 
 CONFIG += c++11
