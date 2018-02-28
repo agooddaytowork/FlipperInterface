@@ -80,7 +80,15 @@ void FlipperInterface::FlipperRespondHandler()
                 || unit.startAddress() & Channel5
                 || unit.startAddress() & Channel6)
         {
-            emit RecordDewPointToLocalDB(unit.startAddress(), (double) (unit.value(0) / m_channelsDecimalPointsHash.value(unit.startAddress())));
+            qDebug() << "start address: " + unit.startAddress();
+            qDebug() << "value count: " + unit.valueCount();
+            qDebug() << unit.value(0);
+            qDebug() << unit.value(1);
+
+            double realValue = ((double) unit.value(0) / (double) m_channelsDecimalPointsHash.value(unit.startAddress()));
+
+            qDebug() << "double value: " + QString::number(realValue);
+           // emit RecordDewPointToLocalDB(unit.startAddress(), (double) (unit.value(0) / m_channelsDecimalPointsHash.value(unit.startAddress())));
         }
 
         else
