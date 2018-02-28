@@ -74,29 +74,8 @@ void FlipperInterface::FlipperRespondHandler()
         const QModbusDataUnit unit = reply->result();
 
         qDebug() << "start address: " + QString::number(unit.startAddress());
+        qDebug() << "value at 0: " + unit.value(0);
 
-        if(unit.startAddress() & Channel1
-                || unit.startAddress() & Channel2
-                || unit.startAddress() & Channel3
-                || unit.startAddress() & Channel4
-                || unit.startAddress() & Channel5
-                || unit.startAddress() & Channel6)
-        {
-
-            qDebug() << "value count: " + unit.valueCount();
-            qDebug() << unit.value(0);
-            qDebug() << unit.value(1);
-
-            double realValue = ((double) unit.value(0) / (double) m_channelsDecimalPointsHash.value(unit.startAddress()));
-
-            qDebug() << "double value: " + QString::number(realValue);
-           // emit RecordDewPointToLocalDB(unit.startAddress(), (double) (unit.value(0) / m_channelsDecimalPointsHash.value(unit.startAddress())));
-        }
-
-        else
-        {
-            // something else here
-        }
 
 
     } else if (reply->error() == QModbusDevice::ProtocolError) {
