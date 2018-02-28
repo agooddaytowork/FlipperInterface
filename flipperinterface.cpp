@@ -73,6 +73,8 @@ void FlipperInterface::FlipperRespondHandler()
     if (reply->error() == QModbusDevice::NoError) {
         const QModbusDataUnit unit = reply->result();
 
+        qDebug() << "start address: " + QString::number(unit.startAddress());
+
         if(unit.startAddress() & Channel1
                 || unit.startAddress() & Channel2
                 || unit.startAddress() & Channel3
@@ -80,7 +82,7 @@ void FlipperInterface::FlipperRespondHandler()
                 || unit.startAddress() & Channel5
                 || unit.startAddress() & Channel6)
         {
-            qDebug() << "start address: " + unit.startAddress();
+
             qDebug() << "value count: " + unit.valueCount();
             qDebug() << unit.value(0);
             qDebug() << unit.value(1);
@@ -125,6 +127,7 @@ void FlipperInterface::emitRequestsHandler()
 {
 #ifdef useDebug
     qDebug() << "Flipper interface: enter emitRequestHandler";
+    qDebug() << "number of requests : " + m_requestList.count();
 #endif
     for (int i = 0; i < m_requestList.count(); i++)
     {
@@ -140,6 +143,7 @@ void FlipperInterface::emitRequestsHandler()
 
         }
     }
+    m_requestList.clear();
 }
 
 bool FlipperInterface::connectToFlipper()
