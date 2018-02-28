@@ -1,7 +1,7 @@
 #include "flipperinterface.h"
 #include <QDebug>
 
-#define useDebug(1)
+#define useDebug (1)
 
 FlipperInterface::FlipperInterface(const QString &tcpAddr, const int &port, const int &flipperAddr, QObject *parent): QObject(parent), m_TCPaddress(tcpAddr), m_TCPport(port), m_FlipperAddress(flipperAddr), m_ChannelEnable(0x00)
 {
@@ -47,7 +47,7 @@ void FlipperInterface::stop()
 void FlipperInterface::setDecimalValue(const quint16 &channel, const quint16 &value)
 {
 #ifdef useDebug
-    qDebug() << "Flipper interface: setDecimal value of channel" + channel + " to : " + value;
+    qDebug() << "Flipper interface: setDecimal value of channel" + QString::number(channel) + " to : " + QString::number(value);
 #endif
     m_channelsDecimalPointsHash.insert(channel, value);
 }
