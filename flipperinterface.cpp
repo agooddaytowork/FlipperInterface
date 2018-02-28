@@ -74,9 +74,11 @@ void FlipperInterface::FlipperRespondHandler()
         const QModbusDataUnit unit = reply->result();
 
         qDebug() << "start address: " + QString::number(unit.startAddress());
-        qDebug() << "value at 0: " + unit.value(0);
+        qDebug() << "value at 0: " + QString::number((qint16) unit.value(0));
 
 
+
+    unit.valueCount();
 
     } else if (reply->error() == QModbusDevice::ProtocolError) {
         qDebug() << reply->errorString();
